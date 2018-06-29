@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>todoList</title>
+		<link rel="stylesheet" href="bootstrap/3.3.6/bootstrap.min.css">
+    <style>
+		.left{
+			width:30%;
+			float: left;
+		}
+		.left-1{
+			float:left;
+		}
+		.right{
+			width:70%;
+			float:left;
+		}
+		.glyphicon{
+			color: #7488D5;
+		}
+		.del{
+			text-decoration: line-through;
+			color: #767171;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="app">
+	<!--导航部分-->
+		<nav class="navbar navbar-inverse">
+  			<div class="container-fluid">
+    			<div class="navbar-header">
+     				 <a class="navbar-brand" href="#">
+        				TODoList
+     				 </a>
+     				 <a href="login.html">
+     				 	注销
+     				 </a>
+    			</div>
+  			</div>
+		</nav>
+	<!--body部分-->
+		<div class="container">
+			<div class="left">
+				
+				<div>
+					<ul class="nav nav-pills nav-stacked">
+  					    <li role="presentation" ><a href="#">☑ 我的一天    {{count}}</a></li>
+					</ul>
+					<input type="text" class="form-control" v-model="searchVal" placeholder="搜索">
+                    <table>
+                        <tr v-for='(todo, index) in todoss'>
+                            <td>
+                            <input type="checkbox" v-model="todo.isSelected" >
+                            {{todo.title}}
+                            <button class="pull-right btn btn-danger btn-xs" @click="remove(todo)" >&bigotimes;</button>
+                        	</td>
+                        </tr>
+                    </table>
+				</div>
+				<div>
+					<table>
+						<tr  v-for="qindan,index in qindans" :key="index" @click="showlist(qindan.qid)">
+							<td>
+								<a href="#">
+								☺{{ qindan.name }}
+								<button class="pull-right btn  btn-xs"@click="deleteqindan(qindan)">
+									&bigotimes;
+								</button>
+								</a>
+							</td>
+						</tr>
+					</table>
+					<div>
+						<input type="text" class="form-control" v-model="newlist.name" placeholder="请输入待办清单"  @keyup.enter="savelist">
+						
+					</div>
+					
+				</div>
+			</div>
+			<div class="right">
+				<input type="text" class="form-control" v-model="newtodo.title" @keyup.enter="add" placeholder="添加待办事项">
+				<table class="table table-hover text-center table-striped">
+					<tr v-for="todo,index in todos" :key="index" v-if="todo.prid === curid" @click ="remember(todo)">
+						<td>
+						<input type="checkbox" v-model="todo.isSelected" >
+						<span :class="{del:todo.isSelected}" v-show="cur !=todo">{{todo.title}}</span>
+						<input type="text" v-model="todo.title" v-show="cur == todo" @keyup.enter="cancel">
+						<button class="pull-right btn btn-danger btn-xs" @click="remove(todo)" >&bigotimes;</button>
+						</td>
+					</tr>
+				</table>
+				<div>
+					<h3>已经完成的</h3>
+					<ul class="list-group" v-for="todo in filtertodos">
+						<li>
+						<input type="checkbox" v-model="todo.isSelected" >
+						{{todo.title}}
+						<button  @click="remove(todo)" >&bigotimes;</button>
+						</li>
+					</ul>
+				</div>
+			</div>	 
+		</div>
+	</div>
+	<script src="vue.js"></script>
+	<script src="js/jquery/2.0.0/jquery.min.js"></script>
+	<script src="js/bootstrap/3.3.6/bootstrap.min.js"></script>
+	<script>
+    
+
+
+		var vue = new Vue({
+		el:'#app',
+		data:{
+			curid:0,
+    		qindans:[{
+    			qid:1,
+    			isSelected:false,
+    			name:'web前端高级技术大作业',
+    		},{
+    			qid:2,
+    			isSelected:false,
+    			name:'数据库大作业',
+    		}],
+    		newlist:{qid: 0, name: ''},
+    		todos:[{
+    			tid:1,
+    			prid:1,
+    			isSelected:false,
+    			title:'完成web前端高级技术大作业的需求分析',
+    		},{
+    			tid:2,
+    			prid:1,
+    			isSelected:false,
+    			title:'完成web前端高级技术大作业的系统分析',
+    		},{
+    			tid:1,
+    			prid:2,
+    			isSelected:false,
+    			title:'完成数据库大作业的系统分析',
+    		},{
+    			tid:2,
+    			prid:2,
+    			isSelected:false,
+    			title:'完成数据库大作业的需求分析',
+    		}],
+    		newtodo:{tid:0,prid:0,title: ''},
+			cur:'',
+			searchVal:''
+			},
+			 created(){
+                this.todos = JSON.parse(localStorage.getItem('data'))||this.todos;
+            },
+            watch:{
+                todos:{
+                    handler(){
+                        localStorage.setItem('data',JSON.stringify(this.todos));
+                    },deep:true
+                }
+            },
+			methods:{
+				add(){
+					if(this.newtodo.tid===0){
+						this.newtodo.prid = this.curid;
+						this.newtodo.tid = this.todos.length+1;
+						this.todos.push(this.newtodo);
+					}
+					this.newtodo={tid:0,prid:0,title:''};
+				},
+				remove(todo){
+					this.todos = this.todos.filter(item => item !== todo);
+				},
+				deleteqindan(qindan){
+					this.qindans = this.qindans.filter(item =>item !==qindan);
+				},
+				remember(todo){
+					this.cur = todo;
+				},
+				cancel(){
+					this.cur ='';
+				},
+				savelist(event){
+					if(this.newlist.qid===0){
+						this.newlist.qid=this.qindans.length+1;
+						this.qindans.push(this.newlist);
+					}
+					this.newlist={qid:0,name:''};
+				},
+				showlist(index){
+					this.curid=index;
+				}
+
+				
+			},
+			computed:{
+				count(){
+					return this.todos.filter(item =>! item.isSelected).length
+				},
+				filtertodos(){
+					return this.todos.filter(function (todo){
+						return todo.isSelected;
+					})
+				},
+				todoss(){
+                        
+                        
+                        var arrByZM = [];
+                        for (var i=0;i<this.todos.length;i++){
+                            
+                            if(this.todos[i].title.search(this.searchVal) != -1){
+                                arrByZM.push(this.todos[i]);
+                            }
+                        }
+                        return arrByZM;
+                    }
+
+				
+		}
+	});
+	</script>
+</body>
+</html>
